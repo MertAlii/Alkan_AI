@@ -62,5 +62,5 @@ Ana menüde aşağıdaki komutları kullanabilirsiniz:
 ## 🔜 Gelecek Planları (Roadmap)
 - [x] Web Arayüzü (Flask + HTML/JS)
 
-
+##  Fotoğraf
 <img width="1284" height="900" alt="image" src="https://github.com/user-attachments/assets/77c701a2-601d-4427-8d4b-af3f1089ed62" />
