@@ -56,7 +56,6 @@ def detect_intent(message):
     ETİKETLER:
     - not_ozet      -> (Kullanıcı notlarını görmek, okumak, listelemek veya notlarıyla ilgili özet istiyorsa)
     - etkinlik_ozet -> (Kullanıcı takvimini, etkinliklerini, ajandasını, planlarını görmek veya özet istiyorsa)
-    - cıkıs         -> (Kullanıcı sohbetten çıkmak istiyorsa)
     - normal        -> (Selamlaşma, genel sohbet, hal hatır sorma veya yukarıdaki kategorilere girmeyen her şey)
     
     Kullanıcı Mesajı: "{message}"

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alkan AI Asistan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="left-panel">
+            
+            <div class="panel-box">
+                <h2><i class="fas fa-sticky-note"></i> Notlar</h2>
+                <ul id="noteList"></ul>
+                <div class="input-group">
+                    <input type="text" id="noteInput" placeholder="Not ekle..." onkeypress="handleNoteKey(event)">
+                    <button onclick="addNote()"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <h2><i class="fas fa-calendar-alt"></i> Etkinlikler</h2>
+                <ul id="eventList"></ul>
+                <h3>Yeni Etkinlik:</h3>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="date" id="eventDate"> 
+                    <div class="input-group">
+                        <input type="text" id="eventDesc" placeholder="Etkinlik adı..." onkeypress="handleEventKey(event)">
+                        <button onclick="addEvent()"><i class="fas fa-check"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="chat-container">
+            <h2><i class="fas fa-robot"></i> Alkan AI</h2>
+            
+            <div class="chat-history" id="chatHistory">
+                <div class="message bot">Merhaba! Nasıl yardımcı olabilirim?</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="chatInput" placeholder="Bir soru sorun..." onkeypress="handleChatKey(event)">
+                <button onclick="sendMessage()" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:5000/api";
+
+        window.onload = function() {
+            loadNotes();
+            loadEvents();
+        };
+
+        // --- NOT İŞLEMLERİ ---
+        async function loadNotes() {
+            try {
+                const res = await fetch(`${API_URL}/notes`);
+                const notes = await res.json();
+                const list = document.getElementById('noteList');
+                list.innerHTML = "";
+                notes.forEach(note => {
+                    list.innerHTML += `<li>${note[0]}</li>`; 
+                });
+            } catch (e) { console.error("Not hatası:", e); }
+        }
+
+        async function addNote() {
+            const input = document.getElementById('noteInput');
+            if (!input.value.trim()) return;
+            
+            await fetch(`${API_URL}/notes`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ content: input.value })
+            });
+            input.value = "";
+            loadNotes();
+        }
+
+        // --- ETKİNLİK İŞLEMLERİ ---
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API_URL}/events`);
+                const events = await res.json();
+                const list = document.getElementById('eventList');
+                list.innerHTML = "";
+                events.forEach(evt => {
+                    list.innerHTML += `
+                        <li>
+                            <span>${evt[0]}</span>
+                            <span class="date-badge">${evt[1]}</span>
+                        </li>`;
+                });
+            } catch (e) { console.error("Etkinlik hatası:", e); }
+        }
+
+        async function addEvent() {
+            const dateInput = document.getElementById('eventDate');
+            const descInput = document.getElementById('eventDesc');
+            
+            if (!dateInput.value || !descInput.value.trim()) {
+                alert("Lütfen tarih ve açıklama girin!");
+                return;
+            }
+
+            await fetch(`${API_URL}/events`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    date: dateInput.value, 
+                    description: descInput.value 
+                })
+            });
+            
+            descInput.value = "";
+            loadEvents();
+        }
+
+        // --- CHAT İŞLEMLERİ ---
+        function handleChatKey(e) { if(e.key === 'Enter') sendMessage(); }
+        function handleNoteKey(e) { if(e.key === 'Enter') addNote(); }
+        function handleEventKey(e) { if(e.key === 'Enter') addEvent(); }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const history = document.getElementById('chatHistory');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            history.innerHTML += `<div class="message user">${msg}</div>`;
+            input.value = "";
+            history.scrollTop = history.scrollHeight;
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot';
+            loadingDiv.innerText = '...';
+            history.appendChild(loadingDiv);
+
+            try {
+                const res = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+                loadingDiv.remove();
+                history.innerHTML += `<div class="message bot">${data.response}</div>`;
+            } catch (err) {
+                loadingDiv.innerText = "Bağlantı hatası.";
+            }
+            history.scrollTop = history.scrollHeight;
+        }
+    </script>
+</body>
+</html>
